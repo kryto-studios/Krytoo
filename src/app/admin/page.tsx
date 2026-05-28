@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { supabase } from "@/utils/supabase/client";
 import { useStudio } from "@/context/StudioContext";
-import { Settings, Users, MessageSquare, Loader2, UploadCloud, Save, X, Globe, Trash2, Plus } from "lucide-react";
+import { Settings, Users, MessageSquare, Loader2, UploadCloud, Save, X, Globe, Trash2, Plus, TrendingUp } from "lucide-react";
 
 export default function AdminDashboard() {
   const { settings, refreshSettings, isAdmin, loading: authLoading } = useStudio();
@@ -187,6 +188,13 @@ export default function AdminDashboard() {
           >
             <MessageSquare size={18} /> Contact Inquiries ({inquiries.length})
           </button>
+          
+          <Link 
+            href="/admin/pipeline"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all whitespace-nowrap text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 hover:text-accent font-semibold ml-auto shadow-[0_0_15px_rgba(14,165,233,0.1)]"
+          >
+            <TrendingUp size={18} /> Client Pipeline Matrix ⚡
+          </Link>
         </div>
 
         {/* Tab Content */}

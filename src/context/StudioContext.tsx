@@ -57,7 +57,7 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     const { data: { session } } = await supabase.auth.getSession();
     const currentUser = session?.user || null;
     setUser(currentUser);
-    setIsAdmin(currentUser?.email === "gamermirchi08@gmail.com");
+    setIsAdmin(!!currentUser?.email && ["gamermirchi08@gmail.com", "krytostudio@gmail.com"].includes(currentUser.email));
   };
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       const currentUser = session?.user || null;
       setUser(currentUser);
-      setIsAdmin(currentUser?.email === "gamermirchi08@gmail.com");
+      setIsAdmin(!!currentUser?.email && ["gamermirchi08@gmail.com", "krytostudio@gmail.com"].includes(currentUser.email));
     });
 
     return () => {

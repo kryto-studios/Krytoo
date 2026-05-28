@@ -5,10 +5,14 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Menu, X, LogOut, UserCircle } from "lucide-react";
 import { useStudio } from "@/context/StudioContext";
+import { supabase } from "@/utils/supabase/client";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeAlertCount, setActiveAlertCount] = useState(0);
+
+  const { settings, user, isAdmin, logout } = useStudio();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,7 +22,45 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const { settings, user, isAdmin, logout } = useStudio();
+  useEffect(() => {
+    if (!isAdmin) {
+      setActiveAlertCount(0);
+      return;
+    }
+
+    const fetchAlertCount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("leads_clients")
+          .select("id")
+          .eq("pitch_status", "Later")
+          .lte("reminder_date", new Date().toISOString());
+
+        if (error) throw error;
+        setActiveAlertCount(data ? data.length : 0);
+      } catch (err) {
+        console.error("Error fetching alert count in Navbar:", err);
+      }
+    };
+
+    fetchAlertCount();
+
+    // Subscribe to realtime updates on leads_clients
+    const channel = supabase
+      .channel("navbar-leads-channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leads_clients" },
+        () => {
+          fetchAlertCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdmin]);
 
   const baseLinks = [
     { name: "Home", href: "/" },
@@ -57,9 +99,15 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              className="text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer relative"
             >
               {link.name}
+              {link.name === "Dashboard" && activeAlertCount > 0 && (
+                <span className="absolute -top-1.5 -right-2.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+              )}
             </Link>
           ))}
           {user ? (
@@ -111,10 +159,16 @@ export default function Navbar() {
             <Link
               key={link.name}
               href={link.href}
-              className="text-base font-medium text-gray-300 hover:text-white transition-colors cursor-pointer"
+              className="text-base font-medium text-gray-300 hover:text-white transition-colors cursor-pointer flex items-center justify-between"
               onClick={() => setMobileMenuOpen(false)}
             >
-              {link.name}
+              <span>{link.name}</span>
+              {link.name === "Dashboard" && activeAlertCount > 0 && (
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+              )}
             </Link>
           ))}
           

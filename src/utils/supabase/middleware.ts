@@ -45,8 +45,8 @@ export async function updateSession(request: NextRequest) {
 
   // Check admin route access
   if (user && isAdminRoute) {
-    const adminEmail = 'gamermirchi08@gmail.com'
-    if (user.email !== adminEmail) {
+    const adminEmails = ['gamermirchi08@gmail.com', 'krytostudio@gmail.com']
+    if (!user.email || !adminEmails.includes(user.email)) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
